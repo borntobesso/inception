@@ -1,0 +1,70 @@
+version: '3.7'
+
+services:
+  nginx:
+    build:
+      context: requirements/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    volumes:
+      - website:/var/www/html
+    depends_on:
+      - wordpress
+    env_file: .env
+    restart: always
+    tty: true
+
+  mariadb:
+    build:
+      context: requirements/mariadb
+      dockerfile: Dockerfile
+    container_name: mariadb
+    networks:
+      - inception
+    env_file: .env
+    volumes:
+      - db:/var/lib/mysql
+    restart: always
+    tty: true
+    expose:
+      - "3306"
+
+  wordpress:
+    build:
+      context: requirements/wordpress
+      dockerfile: Dockerfile
+    container_name: wordpress
+    networks:
+      - inception
+    env_file: .env
+    volumes:
+      - website:/var/www/html
+    restart: always
+    tty: true
+    expose:
+      - "9000"
+    depends_on:
+      - mariadb
+
+volumes:
+  website:
+    driver: local
+    driver_opts:
+      device: /home/sojung/data/wp_data
+      type: none
+      o: bind
+
+  db:
+    driver: local
+    driver_opts:
+      device: /home/sojung/data/mariadb_data
+      type: none
+      o: bind
+
+networks:
+  inception:
+    driver: bridge
